@@ -36,8 +36,12 @@ function getTweets()
         {
             for(i = 0; i < 20; i++)
             {
-                console.log(tweets[i].text);
+                if(tweets[i] == undefined)
+                {
+                    break;
+                }
                 console.log(tweets[i].created_at);
+                console.log(tweets[i].text);
             }
         }
     });
