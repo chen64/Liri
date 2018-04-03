@@ -1,13 +1,13 @@
 var dotenv = require("dotenv").config();
 var keys = require("./keys.js");
 var omdb = require("omdb");
-var twitter = require("twitter");
-var nodeSpotify = require("node-spotify-api");
+var Twitter = require("twitter");
+var Spotify = require("node-spotify-api");
 var request = require("request");
 var fs = require("fs");
 
-var spotify = new Spotify(keys.spotify);
-var client = new Twitter(keys.twitter);
+var spotify = new Spotify(keys.Spotify);
+var client = new Twitter(keys.Twitter);
 
 var option = process.argv[2];
 var input = process.argv[3];
@@ -30,42 +30,54 @@ switch(option)
 
 function getTweets()
 {
-    client.get('statuses/update', function(error, tweet, response) {
-        if(error) throw error;
-        console.log(tweet);
-        console.log(response);
-      });
+    var params = {screen_name: "liri1012", length: 20};
+    client.get('statuses/user_timeline', params, function(error, tweet, response) {
+        if(!error){
+            for(i = 0; i < params.length; i++){
+                console.log(tweet[i]);
+                console.log(tweet[i].created_at)
+            }
+        //console.log(tweet);
+        //console.log(response);
+        }
+    });
 }
 
 function getSong()
 {
-    spotify.search(
-        { 
-            type: 'track', query: input 
-        }).then(function(response) {
-            console.log(response);
-        }).catch(function(err) {
-            console.log(err);
+        spotify.search({ type: 'track', query: input}, function (err, data) {
+            if (err) {
+                return console.log('Error occurred: ' + err);
+            }
+     
+            var artist = data.tracks.items[0].artists[0].name;
+            var name = data.tracks.items[0].name;
+            var album = data.tracks.items[0].album.name;
+            var preview = data.tracks.items[1].preview_url
+     
+            console.log("Artist Name: " + artist + '\n' + "Track Name: " + name + '\n' + "Album Name: " + album + '\n' + "Preview Link - " + preview);
         });
 }
 
 function getMovie()
 {
-    omdb.get({ title: 'Saw', year: 2004 }, true, function(err, movie) {
+    omdb.search(input, function(err, movie) {
         if(err) {
             return console.error(err);
         }
-     
-        if(!movie) {
-            return console.log('Movie not found!');
+        if(movies.length < 1) {
+            return console.log('No movies were found!');
         }
      
-        console.log(movie.title, movie.year);
-        console.log(movie.imdb.rating);
+        movies.forEach(function(movie) {
+        console.log(movie.Title);
+        console.log(formatYear(movie.Year));
+        console.log(movie.imdbRating ? +movie.imdbRating : null);
         console.log(movie.tomatoRating);
         console.log(formatList(movie.Country));
         console.log(movie.Plot);
-        console.log(formatList(movie.Actors));
+        console.log(movie.Actors);
+        });
     });
 }
 
