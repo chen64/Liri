@@ -1,4 +1,4 @@
-var dotenv = require("dotenv").config();
+require("dotenv").config();
 var keys = require("./keys.js");
 var omdb = require("omdb");
 var Twitter = require("twitter");
@@ -30,64 +30,83 @@ switch(option)
 
 function getTweets()
 {
-    var params = {screen_name: "liri1012", length: 20};
-    client.get('statuses/user_timeline', params, function(error, tweet, response) {
-        if(!error){
-            for(i = 0; i < params.length; i++){
-                console.log(tweet[i]);
-                console.log(tweet[i].created_at)
+    var params = {screen_name: "liri1012"};
+    client.get('statuses/user_timeline', params, function(error, tweets, response) {
+        if(!error)
+        {
+            for(i = 0; i < 20; i++)
+            {
+                console.log(tweets[i].text);
+                console.log(tweets[i].created_at);
             }
-        //console.log(tweet);
-        //console.log(response);
         }
     });
 }
 
 function getSong()
 {
-        spotify.search({ type: 'track', query: input}, function (err, data) {
-            if (err) {
-                return console.log('Error occurred: ' + err);
-            }
-     
-            var artist = data.tracks.items[0].artists[0].name;
-            var name = data.tracks.items[0].name;
-            var album = data.tracks.items[0].album.name;
-            var preview = data.tracks.items[1].preview_url
-     
-            console.log("Artist Name: " + artist + '\n' + "Track Name: " + name + '\n' + "Album Name: " + album + '\n' + "Preview Link - " + preview);
-        });
+    var song = process.argv[3]
+    if(song == undefined){
+        song = "The Ace"
+    }
+    console.log(song)
+    spotify.search({ type: 'track', query: song}, function (err, data) {
+        if (err) {
+            return console.log('Error occurred: ' + err);
+        }
+    
+        var artist = data.tracks.items[0].artists[0].name;
+        var name = data.tracks.items[0].name;
+        var album = data.tracks.items[0].album.name;
+        var preview = data.tracks.items[1].preview_url
+    
+        console.log("Artist Name: " + artist + '\n' + "Track Name: " + name + '\n' + "Album Name: " + album + '\n' + "Preview Link - " + preview);
+    });
 }
 
 function getMovie()
 {
-    omdb.search(input, function(err, movie) {
-        if(err) {
-            return console.error(err);
+    var movieName = process.argv[3];    
+    if (movieName == undefined) {
+        movieName = "Mr.+Nobody";
+    }
+    console.log(movieName)
+
+    var queryUrl = "http://www.omdbapi.com/?t=" + movieName + "&y=&plot=short&apikey=trilogy";
+
+
+    request(queryUrl, function (error, response, body) {
+        if (!error && response.statusCode === 200) {
+            var parsedBody = JSON.parse(body)
+            console.log("Movie: " + parsedBody.Title)
+            console.log("Year: " + parsedBody.Year);
+            console.log("IMBD: " + parsedBody.imdbRating);
+            console.log("Rotten Tomatoes: " + parsedBody.Ratings[1].Value)
+            console.log("Country: " + parsedBody.Country)
+            console.log("Language: " + parsedBody.Language)
+            console.log("Plot: " + parsedBody.Plot)
+            console.log("Actors: " + parsedBody.Actors)
         }
-        if(movies.length < 1) {
-            return console.log('No movies were found!');
-        }
-     
-        movies.forEach(function(movie) {
-        console.log(movie.Title);
-        console.log(formatYear(movie.Year));
-        console.log(movie.imdbRating ? +movie.imdbRating : null);
-        console.log(movie.tomatoRating);
-        console.log(formatList(movie.Country));
-        console.log(movie.Plot);
-        console.log(movie.Actors);
-        });
-    });
+    })
 }
 
 function doIt()
 {
-    fs.readFile("random.txt", "utf8", callback)
-    var callback = function(error, data){
-        if(error){
-            return console.log(error)
-        }
-        console.log(getSong())
-    }
+    fs.readFile("random.txt", "utf8", function(err, data){
+        var split = data.split(",");
+        process.argv[2] = split[0];
+        process.argv[3] = split[1];
+        switch(split[0])
+        {
+            case "my-tweets":
+                getTweets();
+                break;
+            case "spotify-this-song":
+                getSong();
+                break;
+            case "movie-this":
+                getMovie();
+                break;
+        } 
+    })
 }
